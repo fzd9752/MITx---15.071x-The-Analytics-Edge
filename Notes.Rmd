@@ -1,0 +1,56 @@
+---
+title: "Note - MITx: 15.071x The Analytics Edge"
+output: 
+  html_document:
+    toc : true
+---
+
+Change the location
+
+```{r eval=FALSE}
+Sys.setlocale("LC_ALL", "C")
+```
+
+Change the Work Directory
+
+```{r eval=FALSE}
+setwd("~/Documents/MOOC/MITx - 15.071x The Analytics Edge")
+```
+
+# Unit 1 
+
+### Basic codes
+
+```{r eval=FALSE}
+mean(WHO$Over60)
+
+which.min(WHO$Over60)
+
+WHO$Country[183]
+
+which.max(WHO$LiteracyRate)
+
+WHO$Country[44]
+
+str(WHO)
+
+tapply(WHO$ChildMortality, WHO$Region, mean)
+
+which.min(tapply(WHO$ChildMortality, WHO$Region, mean))
+```
+
+### which.max(na.rm)?
+
+```{r eval=FALSE}
+max(WHO$LiteracyRate, na.rm = TRUE)
+
+which(WHO$LiteracyRate == max(WHO$LiteracyRate, na.rm = TRUE))
+```
+
+### Clear the Console
+
+```
+Control + L
+```
+
+
