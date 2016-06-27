@@ -236,3 +236,105 @@ summary(framinghamLog)
 library(Rcpp)
 library(mice)
 
+# Unit 4 Tree
+
+setwd("~/Documents/MOOC/MITx - 15.071x The Analytics Edge/Unit 4 Trees")
+
+## The Supreme Court
+
+library(caTools)
+library(rpart)
+library(rpart.plot)
+
+stevens = read.csv("stevens.csv")
+str(stevens)
+set.seed(3000)
+spl = sample.split(stevens$Reverse, SplitRatio = 0.7)
+Train = subset(stevens, spl==TRUE)
+Test = subset(stevens, spl==FALSE)
+StevensTree = rpart(Reverse ~ Circuit + Issue + Petitioner + Respondent + LowerCourt + Unconst, data = Train, method="class", minbucket=25)
+prp(StevensTree)
+
+PredictCART = predict(StevensTree, newdata = Test, type = "class")
+
+library(gplots)
+library(ROCR)
+
+PredictROC = predict(StevensTree, newdata = Test)
+pred = prediction(PredictROC[,2], Test$Reverse)
+perf = performance(pred, "tpr", "fpr")
+plot(perf)
+
+as.numeric(performance(pred, "auc")@y.values)
+
+
+StevensTree2 = rpart(Reverse ~ Circuit + Issue + Petitioner + Respondent + LowerCourt + Unconst, data = Train, method="class", minbucket=100)
+prp(StevensTree2)
+
+StevensTree3 = rpart(Reverse ~ Circuit + Issue + Petitioner + Respondent + LowerCourt + Unconst, data = Train, method="class", minbucket=25)
+prp(StevensTree3)
+
+install.packages("randomForest")
+library(randomForest)
+
+Train$Reverse = as.factor(Train$Reverse)
+Test$Reverse = as.factor(Test$Reverse)
+set.seed(100)
+StevensForest1 = randomForest(Reverse ~ Circuit + Issue + Petitioner + Respondent + LowerCourt + Unconst, data = Train, ntree=200, nodesize=25 )
+predictSteven1 <- predict(StevensForest1, newdata = Test)
+table(Test$Reverse, predictSteven1)
+nrow(Test)
+(43+74)/170
+
+set.seed(200)
+StevensForest2 = randomForest(Reverse ~ Circuit + Issue + Petitioner + Respondent + LowerCourt + Unconst, data = Train, ntree=200, nodesize=25 )
+predictSteven2 <- predict(StevensForest1, newdata = Test)
+table(Test$Reverse, predictSteven2)
+
+library(lattice)
+library(ggplot2)
+library(caret)
+library(e1071)
+
+StevensCART <- rpart(Reverse ~ Circuit + Issue + Petitioner + Respondent + LowerCourt + Unconst, data = Train, method = "class", cp = 0.18)
+prp(StevensCART)
+
+
+## D2Hawkeye
+
+### Video 6
+Claims <- read.csv("ClaimsData.csv")
+str(Claims)
+summary(Claims$reimbursement2008)
+table(Claims$bucket2009)/nrow(Claims)
+library(caTools)
+set.seed(88)
+spl <- sample.split(Claims$bucket2009, SplitRatio = 0.6)
+ClaimsTrain <- subset(Claims, spl == T)
+ClaimsTest <- subset(Claims, spl == F)
+
+mean(ClaimsTrain$age)
+table(ClaimsTrain$diabetes)/nrow(ClaimsTrain)
+
+### Video 7
+table(ClaimsTest$bucket2009, ClaimsTest$bucket2008)
+(110138 + 10721 + 2774 + 1539 + 104)/nrow(ClaimsTest)
+
+PenaltyMatrix = matrix(c(0,1,2,3,4,2,0,1,2,3,4,2,0,1,2,6,4,2,0,1,8,6,4,2,0), byrow=TRUE, nrow=5)
+PenaltyMatrix
+
+sum(as.matrix(table(ClaimsTest$bucket2009, ClaimsTest$bucket2008))*PenaltyMatrix)/nrow(ClaimsTest)
+
+table(ClaimsTest$bucket2009)/nrow(ClaimsTest)
+
+nrow(ClaimsTest)
+sum(table(ClaimsTest$bucket2009)*PenaltyMatrix[,1])/nrow(ClaimsTest)
+
+### Video 8
+library(rpart)
+library(rpart.plot)
+ClaimsTree <- rpart(bucket2009 ~ age + alzheimers + arthritis + cancer + copd + depression + diabetes + heart.failure + ihd + kidney + osteoporosis + stroke + bucket2008 + reimbursement2008, data = ClaimsTrain, method = "class", cp = 0.00005, parms = list(loss = PenaltyMatrix))
+prp(ClaimsTree)
+
+PredictTest <- predict(ClaimsTree, newdata = ClaimsTest, type = "class")
+sum(as.matrix(table(ClaimsTest$bucket2009, PredictTest))*PenaltyMatrix)/nrow(ClaimsTest)
